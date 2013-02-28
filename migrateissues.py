@@ -48,9 +48,9 @@ GOOGLE_STATUS_MAPPING = {
     #"Started"   :"started",
     #"Fixed"     :"fixed",
     #"Verified"  :"verified",
-    "Invalid"   :"invalid",
-    "Duplicate" :"duplicate",
-    "WontFix"   :"wontfix",
+    #"Invalid"   :"invalid",
+    #"Duplicate" :"duplicate",
+    #"WontFix"   :"wontfix",
     #"Done"      :"done",
 }
 
@@ -63,7 +63,7 @@ GOOGLE_ID_RE = GOOGLE_ISSUE_TEMPLATE % GOOGLE_URL_RE
 # default labels to map them, or add your custom labels to the array.
 GOOGLE_LABEL_MAPPING = {
     'Type-Defect'           : 'bug',
-    'Type-Enhancement'      : 'enhancement',
+    'Type-Enhancement'      : 'feature',
     #'Type-Task'             : 'Type-Task',
     #'Type-Review'           : 'Type-Review',
     #'Type-Other'            : 'Type-Other',
@@ -185,7 +185,7 @@ def add_issue_to_github(issue):
     # Build a list of labels to apply to the new issue, including an 'imported' tag that
     # we can use to identify this issue as one that's passed through migration.
 
-    labels = ["imported"]
+    labels = ["migrated"]
 
     # Convert Google Code labels to Github labels where possible
 
