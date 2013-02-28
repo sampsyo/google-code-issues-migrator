@@ -193,7 +193,8 @@ def add_issue_to_github(issue):
         for label in issue.label:
             if label.text.startswith("Priority-") and options.omit_priority:
                 continue
-            labels.append(GOOGLE_LABEL_MAPPING.get(label.text, label.text))
+            if label.text in GOOGLE_LABEL_MAPPING:
+                labels.append(GOOGLE_LABEL_MAPPING[label.text])
 
     # Add additional labels based on the issue's state
 
@@ -206,9 +207,13 @@ def add_issue_to_github(issue):
 
     header = "_Original author: %s (%s)_" % (author, date)
     footer = GOOGLE_ISSUE_TEMPLATE % link
-    body = "%s\n\n%s\n\n\n%s" % (header, content, footer)
+    if options.link_only:
+        body = "This issue was automatically migrated from Google Code.\n%s\n%s" % (header, footer)
+    else:
+        body = "%s\n\n%s\n\n\n%s" % (header, content, footer)
 
-    output("Adding issue %d" % gid)
+    output("Adding issue %d: %s\n" % (gid, title))
+    output(body)
 
     if not options.dry_run:
         github_labels = [ github_label(label) for label in labels ]
@@ -331,7 +336,8 @@ def process_gcode_issues(existing_issues):
             else: github_issue = add_issue_to_github(issue)
 
             if github_issue:
-                add_comments_to_issue(github_issue, gid)
+                if not options.link_only:
+                    add_comments_to_issue(github_issue, gid)
                 if github_issue.state != issue.state.text:
                     github_issue.edit(state = issue.state.text)
             output("\n")
@@ -370,7 +376,7 @@ def get_existing_github_issues():
                 google_id = int(id_match.group(1))
                 issue_map[google_id] = issue
                 labels = [l.name for l in issue.get_labels()]
-                if not 'imported' in labels:
+                if not 'migrated' in labels:
                     # TODO we could fix up the label here instead of just warning
                     logging.warn('Issue missing imported label %s- %s - %s',google_id,repr(labels),issue.title)
         imported_count = len(issue_map)
@@ -468,6 +474,8 @@ if __name__ == "__main__":
     parser.add_option("-s", "--synchronize-ids", action = "store_true", dest = "synchronize_ids", help = "Ensure that migrated issues keep the same ID", default = False)
     parser.add_option("-i", "--assign-ids", action = "store_true", dest = "assign_ids", help = "Assign IDs", default = False)
     parser.add_option('--skip_closed',action = 'store_true',dest = 'skip_closed', help = 'Skip all closed bugs', default = False)
+    parser.add_option('--link-only',action = 'store_true',dest = 'link_only',
+                      help = 'no comments or body: just migrate title and link', default = False)
 
     options, args = parser.parse_args()
 
